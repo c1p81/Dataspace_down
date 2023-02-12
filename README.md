@@ -10,6 +10,9 @@ Requires **curl**
 By default, the software only searches. To activate the download set the switch to true  
 Help : **dataspace_down.go -h**  
 Example : **go run dataspace_down.go --username=my_username --password=my_password --download=true**  
+
+Example 2 : **go run dataspace_down.go -password='Tmd1ccdUs!dataspace' -username="lucainnoc@gmail.com" -start_date="2022-08-01T00:00:00.000Z" -end_date="2022-08-26T00:00:00.000Z" -collection="SENTINEL-2" -ptype="S2MSI1"**   
+
 # Parameters  
   **-cloudCover** string  
     	Less than % cloud cover (default "10") Not used with Sentine-1 Collection
@@ -21,7 +24,7 @@ Example : **go run dataspace_down.go --username=my_username --password=my_passwo
     	Product type   
       Options :  
       **SLC**  Sentinel 1 SLC   
-      **GRD**  Sentinel 1 GRDH  (default for Collection Sentinel-1) 
+      **GRD**  Sentinel 1 GRDH  (default for Collection Sentinel-1)   
       **RAW**  Sentinel 2 RAW  
       **OCN**  Sentinel 2 OCN  
       **S2MSI1C**    Sentinel 2 Level 1C   
