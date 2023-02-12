@@ -63,6 +63,7 @@ func main() {
 	var username string
 	var password string
 	var cloudCover string
+	var ptype string
 	var download bool
 
 	tempo_e := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
@@ -74,10 +75,12 @@ func main() {
 	flag.StringVar(&search_point_lat, "search_point_lat", "43.78186592737776", "Latitude")
 	flag.StringVar(&collection, "collection", "SENTINEL-2", "Collection")
 	flag.StringVar(&dest_path, "dest_path", "./", "Download folder")
-	flag.StringVar(&cloudCover, "cloudCover", "10", "Less than % cloud cover")
+	flag.StringVar(&cloudCover, "cloudCover", "10", "Less than % cloud cover No Sentine-1")
 	flag.StringVar(&username, "username", "", "Username (required)")
 	flag.StringVar(&password, "password", "", "Password (required)")
+	flag.StringVar(&ptype, "ptype", "", "Product type (default S2MSI2A)")
 	flag.BoolVar(&download, "download", false, "If true start the download")
+
 	flag.Parse()
 
 	if (*&password == "") || (*&username == "") {
@@ -87,8 +90,58 @@ func main() {
 		os.Exit(1)
 	}
 
+	if (*&ptype == "") && (*&collection == "SENTINEL-2") {
+		ptype = "S2MSI2A"
+	}
+
+	if (*&ptype == "") && (*&collection == "SENTINEL-1") {
+		ptype = "GRD"
+	}
+
+	collection_list := map[string]bool{
+		"SENTINEL-1":  true,
+		"SENTINEL-2":  true,
+		"SENTINEL-3":  true,
+		"SENTINEL-5P": true,
+	}
+
+	S1_list := map[string]bool{
+		"GRD": true,
+		"SLC": true,
+		"OCN": true,
+		"RAW": true,
+	}
+
+	S2_list := map[string]bool{
+		"S2MSI1C": true,
+		"S2MSI2A": true,
+	}
+
+	if !collection_list[collection] {
+		fmt.Println("Wrong collection name")
+		fmt.Println("Avalaible SENTINEL-1, SENTINEL-2, SENTINEL-3, SENTINEL-5P")
+		os.Exit(1)
+	}
+
+	if collection == "SENTINEL-1" {
+		if !S1_list[ptype] {
+			fmt.Println("Wrong product type for collection SENTINEL-1")
+			fmt.Println("Avalaible SLC, GRD, RAW, OCN")
+			os.Exit(1)
+		}
+	}
+
+	if collection == "SENTINEL-2" {
+		if !S2_list[ptype] {
+			fmt.Println("Wrong product type for collection SENTINEL-2")
+			fmt.Println("Avalaible S2MSI1C, S2MSI2A")
+			os.Exit(1)
+		}
+	}
+
 	fmt.Println("============== Parameters ======================")
 	fmt.Println("Collection : " + collection)
+	fmt.Println("Prod.Type  : " + ptype)
 	fmt.Println("Start date : " + start_date)
 	fmt.Println("End date   : " + end_date)
 	fmt.Println("Latitude   : " + search_point_lat)
@@ -96,7 +149,24 @@ func main() {
 	fmt.Println("% Cloud    : less than " + cloudCover + " %")
 	fmt.Println("Folder     : " + dest_path)
 	fmt.Println("====================================")
-	url_search := "https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Attributes/OData.CSC.DoubleAttribute/any(att:att/Name%20eq%20%27cloudCover%27%20and%20att/OData.CSC.DoubleAttribute/Value%20le%20" + cloudCover + ")%20and%20Collection/Name%20eq%20%27" + collection + "%27%20and%20ContentDate/Start%20gt%20" + start_date + "%20and%20ContentDate/Start%20lt%20" + end_date + "%20and%20OData.CSC.Intersects(area=geography%27SRID=4326;POINT(" + search_point_lon + "%20" + search_point_lat + ")%27)"
+
+	var url_search string
+	if collection == "SENTINEL-1" {
+		url_search = "https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Attributes/OData.CSC.StringAttribute/any(att:att/Name%20eq%20%27productType%27%20and%20att/OData.CSC.StringAttribute/Value%20eq%20%27" + ptype + "%27)%20and%20Collection/Name%20eq%20%27" + collection + "%27%20and%20ContentDate/Start%20gt%20" + start_date + "%20and%20ContentDate/Start%20lt%20" + end_date + "%20and%20OData.CSC.Intersects(area=geography%27SRID=4326;POINT(" + search_point_lon + "%20" + search_point_lat + ")%27)"
+	}
+	if collection == "SENTINEL-2" {
+		url_search = "https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Attributes/OData.CSC.StringAttribute/any(att:att/Name%20eq%20%27productType%27%20and%20att/OData.CSC.StringAttribute/Value%20eq%20%27" + ptype + "%27)%20and%20Attributes/OData.CSC.DoubleAttribute/any(att:att/Name%20eq%20%27cloudCover%27%20and%20att/OData.CSC.DoubleAttribute/Value%20le%20" + cloudCover + ")%20and%20Collection/Name%20eq%20%27" + collection + "%27%20and%20ContentDate/Start%20gt%20" + start_date + "%20and%20ContentDate/Start%20lt%20" + end_date + "%20and%20OData.CSC.Intersects(area=geography%27SRID=4326;POINT(" + search_point_lon + "%20" + search_point_lat + ")%27)"
+	}
+
+	if collection == "SENTINEL-3" {
+		url_search = "https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name%20eq%20%27" + collection + "%27%20and%20ContentDate/Start%20gt%20" + start_date + "%20and%20ContentDate/Start%20lt%20" + end_date + "%20and%20OData.CSC.Intersects(area=geography%27SRID=4326;POINT(" + search_point_lon + "%20" + search_point_lat + ")%27)"
+	}
+
+	if collection == "SENTINEL-5P" {
+		url_search = "https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name%20eq%20%27" + collection + "%27%20and%20ContentDate/Start%20gt%20" + start_date + "%20and%20ContentDate/Start%20lt%20" + end_date + "%20and%20OData.CSC.Intersects(area=geography%27SRID=4326;POINT(" + search_point_lon + "%20" + search_point_lat + ")%27)"
+	}
+
+	//fmt.Println(url_search)
 	resp, err := http.Get(url_search)
 	if err != nil {
 		log.Fatal(err)
