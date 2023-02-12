@@ -11,7 +11,7 @@ By default, the software only searches. To activate the download set the switch 
 Help : **dataspace_down.go -h**  
 Example : **go run dataspace_down.go --username=my_username --password=my_password --download=true**  
 
-Example 2 : **go run dataspace_down.go -password='Tmd1ccdUs!dataspace' -username="lucainnoc@gmail.com" -start_date="2022-08-01T00:00:00.000Z" -end_date="2022-08-26T00:00:00.000Z" -collection="SENTINEL-2" -ptype="S2MSI1"**   
+Example 2 : **go run dataspace_down.go -password='my_password' -username="my_username" -start_date="2022-08-01T00:00:00.000Z" -end_date="2022-08-26T00:00:00.000Z" -collection="SENTINEL-2" -ptype="S2MSI1"**   
 
 # Parameters  
   **-cloudCover** string  
